@@ -1,0 +1,115 @@
+#include <iostream>
+#include <iomanip>
+#include <string>
+
+using namespace std;
+
+struct Product {
+    int id;
+    string name;
+    double price;
+    int quantity;
+};
+
+struct CashierStore {
+    Product products[3];
+    double userBalance;
+    pair<string, pair<double, int>> purchases[100];
+    int productCount;
+    int purchaseCount;
+
+    CashierStore() : userBalance(0.0), productCount(3), purchaseCount(0) {
+        products[0] = {1, "Soda", 1.50, 10};
+        products[1] = {2, "Chips", 1.00, 15};
+        products[2] = {3, "Chocolate", 1.25, 20};
+    }
+};
+
+int displayProductList(const CashierStore& cashierStore) {
+    cout << "Product List:\nID\tName\t\tPrice\tQuantity\n";
+    for (int i = 0; i < cashierStore.productCount; ++i) {
+        const Product& product = cashierStore.products[i];
+        cout << product.id << "\t" << product.name << "\t\t$" << fixed << setprecision(2) << product.price << "\t" << product.quantity << endl;
+    }
+    return 0; // Return value for success
+}
+
+int addMoney(CashierStore& cashierStore) {
+    double amount;
+    cout << "Enter the amount to add: $";
+    cin >> amount;
+    cashierStore.userBalance += amount;
+    cout << "Current Balance: $" << fixed << setprecision(2) << cashierStore.userBalance << endl;
+    return 0; // Return value for success
+}
+
+int purchaseItem(CashierStore& cashierStore) {
+    int productId;
+    cout << "Enter product ID to purchase: ";
+    cin >> productId;
+
+    bool productFound = false;
+    int quantity;
+
+    for (int i = 0; i < cashierStore.productCount; ++i) {
+        Product& product = cashierStore.products[i];
+        if (product.id == productId) {
+            productFound = true;
+            cout << "Enter the quantity to purchase for " << product.name << ": ";
+            cin >> quantity;
+
+            if (cashierStore.userBalance >= product.price * quantity && product.quantity >= quantity) {
+                product.quantity -= quantity;
+                cashierStore.userBalance -= product.price * quantity;
+                cashierStore.purchases[cashierStore.purchaseCount++] = {product.name, {product.price, quantity}};
+                cout << "You purchased " << quantity << " units of " << product.name << "\n";
+            } else {
+                cout << "Insufficient funds or stock. Please adjust the quantity or add more money.\n";
+            }
+            return 0; // Return value for success
+        }
+    }
+
+    if (!productFound) {
+        cout << "Product not found!\n";
+    }
+
+    return 1; // Return value for failure
+}
+
+int returnChange(CashierStore& cashierStore) {
+    if (cashierStore.userBalance > 0.0) {
+        cout << "Returning Change: $" << fixed << setprecision(2) << cashierStore.userBalance << endl;
+        cout << "Purchases made during this session:\n";
+        for (int i = 0; i < cashierStore.purchaseCount; ++i) {
+            const auto& purchase = cashierStore.purchases[i];
+            cout << purchase.first << " (Quantity: " << purchase.second.second << ", Total: $" << fixed << setprecision(2) << purchase.second.first * purchase.second.second << ")\n";
+        }
+    } else {
+        cout << "No change to return.\n";
+    }
+    cashierStore.userBalance = 0.0;
+    cashierStore.purchaseCount = 0;
+    return 0; // Return value for success
+}
+
+int main() {
+    CashierStore cashierStore;
+
+    int choice;
+    while (true) {
+        cout << "\nCashier Store Management System\n1. Display Product List\n2. Add Money\n3. Purchase Item\n4. Return Change\n5. Exit\nEnter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1: displayProductList(cashierStore); break;
+            case 2: addMoney(cashierStore); break;
+            case 3: purchaseItem(cashierStore); break;
+            case 4: returnChange(cashierStore); break;
+            case 5: cout << "Exiting the program.\n"; return 0;
+            default: cout << "Invalid choice. Please try again.\n";
+        }
+    }
+
+    return 0;
+}
